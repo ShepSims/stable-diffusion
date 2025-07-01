@@ -1,0 +1,94 @@
+{
+    "family": "stable-diffusion-api",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": ["EC2"],
+    "cpu": "4096",
+    "memory": "16384",
+    "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+    "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskRole",
+    "containerDefinitions": [
+        {
+            "name": "stable-diffusion-api",
+            "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/stable-diffusion-api:latest",
+            "portMappings": [
+                {
+                    "containerPort": 8000,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/stable-diffusion-api",
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            },
+            "environment": [
+                {
+                    "name": "AWS_REGION",
+                    "value": "us-east-1"
+                },
+                {
+                    "name": "PYTHONPATH",
+                    "value": "/app"
+                }
+            ],
+            "mountPoints": [
+                {
+                    "sourceVolume": "models",
+                    "containerPath": "/app/models"
+                },
+                {
+                    "sourceVolume": "outputs",
+                    "containerPath": "/app/outputs"
+                }
+            ],
+            "resourceRequirements": [
+                {
+                    "type": "GPU",
+                    "value": "1"
+                }
+            ],
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "curl -f http://localhost:8000/health || exit 1"
+                ],
+                "interval": 30,
+                "timeout": 5,
+                "retries": 3,
+                "startPeriod": 60
+            }
+        }
+    ],
+    "volumes": [
+        {
+            "name": "models",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "fs-XXXXXXXXX",
+                "transitEncryption": "ENABLED",
+                "authorizationConfig": {
+                    "accessPointId": "fsap-XXXXXXXXX"
+                }
+            }
+        },
+        {
+            "name": "outputs",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "fs-XXXXXXXXX",
+                "transitEncryption": "ENABLED",
+                "authorizationConfig": {
+                    "accessPointId": "fsap-XXXXXXXXY"
+                }
+            }
+        }
+    ],
+    "placementConstraints": [
+        {
+            "type": "memberOf",
+            "expression": "attribute:ecs.instance-type =~ g4dn.*"
+        }
+    ]
+}
