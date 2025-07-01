@@ -200,6 +200,8 @@ def monitor_training(job_id, timeout=3600):
         time.sleep(30)
 
 def main():
+    global API_BASE_URL
+    
     parser = argparse.ArgumentParser(description="Test Stable Diffusion API")
     parser.add_argument("--model-name", default="test-model", help="Model name for testing")
     parser.add_argument("--image-dir", required=True, help="Directory containing training images")
@@ -208,7 +210,7 @@ def main():
     
     args = parser.parse_args()
     
-    global API_BASE_URL
+    # Update API_BASE_URL if provided
     API_BASE_URL = args.api_url
     
     print(f"Testing API at: {API_BASE_URL}")

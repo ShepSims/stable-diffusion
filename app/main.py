@@ -216,19 +216,17 @@ async def get_training_status(job_id: str):
 @app.get("/list-models")
 async def list_models():
     """List all available fine-tuned models"""
-    return await model_manager.list_models()
+    models = model_manager.list_available_models()
+    return {"models": models}
 
 @app.post("/generate")
 async def generate_image(request: GenerationRequest):
     """Generate image using fine-tuned model"""
     try:
-        # Load model if not already loaded
-        pipeline = await model_manager.load_model(request.model_name)
-        
-        # Generate image
-        images = await model_manager.generate_images(
-            pipeline=pipeline,
+        # Generate image using ModelManager
+        images = model_manager.generate_image(
             prompt=request.prompt,
+            model_name=request.model_name,
             negative_prompt=request.negative_prompt,
             num_inference_steps=request.num_inference_steps,
             guidance_scale=request.guidance_scale,
@@ -286,7 +284,11 @@ async def download_model(model_name: str):
 @app.delete("/delete-model/{model_name}")
 async def delete_model(model_name: str):
     """Delete a fine-tuned model"""
-    return await model_manager.delete_model(model_name)
+    success = model_manager.delete_model(model_name)
+    if success:
+        return {"message": f"Model {model_name} deleted successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="Model not found")
 
 if __name__ == "__main__":
     import uvicorn

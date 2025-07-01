@@ -1,5 +1,5 @@
 import os
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # API Settings
@@ -23,9 +23,9 @@ class Settings(BaseSettings):
     S3_BUCKET: str = ""
     
     # Compute Settings
-    DEVICE: str = "cuda" if os.system("nvidia-smi") == 0 else "cpu"
-    MIXED_PRECISION: str = "fp16"
-    USE_XFORMERS: bool = True
+    DEVICE: str = "mps"  # Use Metal Performance Shaders on Mac
+    MIXED_PRECISION: str = "no"  # MPS doesn't support fp16 mixed precision
+    USE_XFORMERS: bool = False
     
     # Security
     MAX_FILE_SIZE: int = 50 * 1024 * 1024  # 50MB
